@@ -12,7 +12,7 @@ Tested with `clang-1300.0.29.3` but ought to work on anything remotely modern.
 
 ## Usage
 
-Wordlesmith starts with an 8,636-word Scrabble dictionary for five letter words. You then use filters, in the form of command line arguments, to whittle down the wordlist until you get the correct answer.
+Wordlesmith starts with an 8,636-word Scrabble dictionary for five letter words. You then use filters, in the form of command line arguments, to whittle down the wordlist until you get the correct answer. The output is the top five matching words (based on Scoring, see below) and the total number of matches.
 
 ### Filters
 
@@ -53,3 +53,18 @@ The order of the filters doesn't matter, and negative matches can be all combine
 
 This is the same as the previous filter, but with an exact match on the `r` in the fourth position.
 
+### Scoring
+
+The key to Wordle is to maximize the information you obtain from each guess. Wordlesmith tries to model this by calculating a score for each of the words that pass through the filters, and outputting up to five of the top scorers.
+
+The score is calculated by looking at each of the unknown positions (that is, positions that don't have an exact match defined for them) in each candidate, and multiplying the fraction of the candidate words that contain that letter by the fraction of the candidate words that contain that letter _in that position_. This is to bias towards words that will provide either exact or negative matches for high frequency characters, which seems to pare down the candidate list the most quickly.
+
+If you run `wordlesmith` with no filters you get the algorithm's guess at the five best initial words:
+
+1. tares
+2. cares
+3. lares
+4. dares
+5. pares
+
+I'm not 100% confident in this algorithm and would be happy to take pull requests.
