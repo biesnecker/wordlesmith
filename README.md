@@ -29,3 +29,27 @@ Negative match filters start with `-` and contain one or more characters that do
 #### Partial Matches
 
 Partial matches are in the format `?a1`, with the first character `?`, the second character the matched characters, and the third character the index where the character **isn't**. That is, `?z1` would filter all words that either don't have a `z` in them or that have a `z` in position 1.
+
+### Filter Examples
+
+![](https://via.placeholder.com/64/808080/000000?text=Q) ![](https://via.placeholder.com/64/808080/000000?text=W) ![](https://via.placeholder.com/64/808080/000000?text=E) ![](https://via.placeholder.com/64/808080/000000?text=R) ![](https://via.placeholder.com/64/808080/000000?text=T)
+
+`wordlesmith -qwert`
+
+Filters out all words that contain any of the characters `q`, `w`, `e`, `r`, or `t`.
+
+![](https://via.placeholder.com/64/ffff00/000000?text=Q) ![](https://via.placeholder.com/64/808080/000000?text=W) ![](https://via.placeholder.com/64/808080/000000?text=E) ![](https://via.placeholder.com/64/808080/000000?text=R) ![](https://via.placeholder.com/64/ffff00/000000?text=T)
+
+`wordlesmith %q1 -wer %t5`
+
+The order of the filters doesn't matter, and negative matches can be all combined into a single argument, or split into multiple arguments. The two partial matches in this example are saying:
+
+- The word contains a `q`, but not in the first position.
+- The word contains a `t`, but not in the fifth position.
+
+![](https://via.placeholder.com/64/ffff00/000000?text=Q) ![](https://via.placeholder.com/64/808080/000000?text=W) ![](https://via.placeholder.com/64/808080/000000?text=E) ![](https://via.placeholder.com/64/00ff00/000000?text=R) ![](https://via.placeholder.com/64/ffff00/000000?text=T)
+
+`wordlesmith %q1 -we %t5 -y +r4`
+
+This is the same as the previous filter, but with an exact match on the `r` in the fourth position.
+
