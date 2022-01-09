@@ -16,7 +16,7 @@ Wordlesmith starts with an 8,636-word Scrabble dictionary for five letter words.
 
 ### Filters
 
-There are three kinds of filters: exact match filters (using `+`), negative matches (using `-`), and partial matches (using `%`).
+There are three kinds of filters: exact match (using `+`), negative matches (using `-`), and partial matches (using `%`).
 
 #### Exact Matches
 
