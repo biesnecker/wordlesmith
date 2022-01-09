@@ -24,7 +24,7 @@ Exact match filters are in the format `+a1`, with the first character `+`, the s
 
 #### Negative Matches
 
-Negative match filters start with `-` and contain one or more characters that don't exist in the target word. For example, `-qwerty` would filter our all words that contain `q`, `w`, `e`, `r`, `t`, or `y`.
+Negative match filters start with `-` and contain one or more characters that don't exist in the target word. For example, `-qwerty` would filter out all words that contain `q`, `w`, `e`, `r`, `t`, or `y`.
 
 #### Partial Matches
 
