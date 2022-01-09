@@ -49,7 +49,7 @@ The order of the filters doesn't matter, and negative matches can be all combine
 
 ![](https://via.placeholder.com/64/ffff00/000000?text=Q) ![](https://via.placeholder.com/64/808080/000000?text=W) ![](https://via.placeholder.com/64/808080/000000?text=E) ![](https://via.placeholder.com/64/00ff00/000000?text=R) ![](https://via.placeholder.com/64/ffff00/000000?text=T)
 
-`wordlesmith %q1 -we %t5 -y +r4`
+`wordlesmith %q1 -we %t5 +r4`
 
 This is the same as the previous filter, but with an exact match on the `r` in the fourth position.
 
