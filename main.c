@@ -121,7 +121,7 @@ static bool isValidArgument(const char* arg, int* len) {
     return true;
 }
 
-int compareScores(const void* a, const void* b) {
+static int compareScores(const void* a, const void* b) {
     const ScoreCell* sa = (const ScoreCell*)a;
     const ScoreCell* sb = (const ScoreCell*)b;
     // Sort descending so reverse the return values.
