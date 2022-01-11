@@ -184,12 +184,13 @@ int main(int argc, char** argv) {
     }
 
     qsort(scores, out.filteredLen, sizeof(ScoreCell), compareScores);
-    const int wordCount =
+    const int candidateCount =
         out.filteredLen >= CANDIDATE_COUNT ? CANDIDATE_COUNT : out.filteredLen;
-    for (int i = 0; i < wordCount; ++i) {
+    for (int i = 0; i < candidateCount; ++i) {
         printf("%s\n", scores[i].w->w);
     }
-    printf("Total Matches: %d\n", out.filteredLen);
+    printf("Total Matches: %d/%d (%.2f%%)\n", out.filteredLen, wordCount,
+           100.0 * (double)out.filteredLen / (double)wordCount);
 
     freeFilterOutput(&out);
     free(scores);
