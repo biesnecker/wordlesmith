@@ -28,7 +28,7 @@ Negative match filters start with `-` and contain one or more characters that do
 
 #### Partial Matches
 
-Partial matches are in the format `?a1`, with the first character `?`, the second character the matched characters, and the third character the index where the character **isn't**. That is, `?z1` would filter all words that either don't have a `z` in them or that have a `z` in position 1.
+Partial matches are in the format `%a1`, with the first character `%`, the second character the matched characters, and the third character the index where the character **isn't**. That is, `%z1` would filter all words that either don't have a `z` in them or that have a `z` in position 1.
 
 ### Filter Examples
 
