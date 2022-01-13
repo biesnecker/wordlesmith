@@ -3,13 +3,19 @@ import json
 with open("accepted.json") as fp:
     c = fp.read()
     words = json.loads(c)
-    accepted = [(w, False) for w in words]
+    accepted = set(w for w in words)
 
 with open("answers.json") as fp:
     c = fp.read()
     words = json.loads(c)
-    answers = [(w, True) for w in words]
+    answers = set(w for w in words)
 
+with open("scrabble.json") as fp:
+    c = fp.read()
+    words = json.loads(c)
+    scrabble = set(w for w in words)
+
+ALL_WORDS = sorted(set().union(accepted, answers, scrabble))
 
 with open("words.h", "w") as fp:
     fp.write("#pragma once\n\n")
@@ -23,27 +29,32 @@ with open("words.h", "w") as fp:
             "    const uint32_t letterMasks[5];\n",
             "    const uint32_t contains;\n",
             "    const bool canBeAnswer;\n",
+            "    const bool isScrabbleWord;\n",
             "} word;\n\n",
         ]
     )
 
     fp.write("word words[] = {\n")
     wc = 0
-    for lst in [accepted, answers]:
-        for (word, canBeAnswer) in lst:
-            if len(word) != 5:
-                continue
-            letters = []
-            seen = 0
-            for c in word:
-                m = 1 << (ord(c) - ord("a"))
-                seen |= m
-                letters.append(m)
-            letterMasks = "{" + ", ".join(str(lm) + "U" for lm in letters) + "}"
-            cba = "false"
-            if canBeAnswer:
-                cba = "true"
-            fp.write(f'    {{"{word}", {letterMasks}, {seen}U, {cba}}},\n')
-            wc += 1
+    for word in ALL_WORDS:
+        if len(word) != 5:
+            continue
+        canBeAnswer = word in answers
+        scrabbleWord = word in scrabble
+        letters = []
+        seen = 0
+        for c in word:
+            m = 1 << (ord(c) - ord("a"))
+            seen |= m
+            letters.append(m)
+        letterMasks = "{" + ", ".join(str(lm) + "U" for lm in letters) + "}"
+        cba = "false"
+        scr = "false"
+        if canBeAnswer:
+            cba = "true"
+        if scrabbleWord:
+            scr = "true"
+        fp.write(f'    {{"{word}", {letterMasks}, {seen}U, {cba}, {scr}}},\n')
+        wc += 1
     fp.write("};\n\n")
     fp.write(f"const int wordCount = {wc};\n")

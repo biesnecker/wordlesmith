@@ -14,12 +14,17 @@
 #define WORD_LENGTH 5
 #define CANDIDATE_COUNT 5
 
+static const char* supportedFlags[] = {"--help", "--no-colors",
+                                       "--answers-only", "--scrabble-only"};
+static const int flagCount = sizeof(supportedFlags) / sizeof(char*);
+
 typedef struct FilterInput {
     uint32_t mustHave;
     uint32_t mustNotHave;
     uint32_t mustHavePos[WORD_LENGTH];
     uint32_t mustNotHavePos[WORD_LENGTH];
     bool answersOnly;
+    bool scrabbleOnly;
 } FilterInput;
 
 typedef struct FilterOutput {
@@ -73,6 +78,9 @@ static void filterWords(word* words, int wordLen, const FilterInput* in,
     for (int i = 0; i < wordLen; i++) {
         word* w = &words[i];
         if (in->answersOnly && !w->canBeAnswer) {
+            continue;
+        }
+        if (in->scrabbleOnly && !w->isScrabbleWord) {
             continue;
         }
         if ((w->contains & in->mustHave) != in->mustHave ||
@@ -130,9 +138,14 @@ static bool isValidArgument(const char* arg, int* len) {
 
     if (arg[0] == '-') {
         if (arg[1] == '-') {
-            if (!(strcmp("--help", arg) == 0 ||
-                  strcmp("--no-colors", arg) == 0 ||
-                  strcmp("--answers-only", arg) == 0)) {
+            bool goodFlag = false;
+            for (int i = 0; i < flagCount; i++) {
+                if (strcmp(supportedFlags[i], arg) == 0) {
+                    goodFlag = true;
+                    break;
+                }
+            }
+            if (!goodFlag) {
                 return false;
             }
         } else {
@@ -166,13 +179,14 @@ static void showProgramHelp() {
            "usage: wordlesmith [--help] [--no-colors] [--answers-only] "
            "FILTERS\n\n"
            "For filter format, please see https://tinyurl.com/mrxrra6u\n\n"
-           "--help        : show this help\n"
-           "--no-colors   : don't output colors\n"
-           "--answers-only: only show candidates that could be a solution; "
-           "this\n"
-           "                reduces the number of possible words, but "
-           "might not\n"
-           "                lead to optimal filtering.\n");
+           "--help         : show this help\n"
+           "--no-colors    : don't output colors\n"
+           "--answers-only : only show candidates that could be a solution; \n"
+           "                 this reduces the number of possible words, but \n"
+           "                 might not lead to optimal filtering.\n"
+           "--scrabble-only: only show candidates that are legal scrabble\n"
+           "                 words; this helps with Wordle clones that use\n"
+           "                 different word lists.\n");
 }
 
 int main(int argc, char** argv) {
@@ -192,15 +206,12 @@ int main(int argc, char** argv) {
 
         switch (arg[0]) {
             case '+':
-                // This is a mustHave argument.
+                // This is a mustHavePosArgument.
                 in.mustHave |= LETTER_MASK(arg[1]);
-                if (len == 3) {
-                    // This is a mustHavePosArgument.
-                    pos = (int)(arg[2] - '0' - 1);
-                    // Each position can only be a single letter, so just
-                    // assign don't OR.
-                    in.mustHavePos[pos] = LETTER_MASK(arg[1]);
-                }
+                pos = (int)(arg[2] - '0' - 1);
+                // Each position can only be a single letter, so just
+                // assign don't OR.
+                in.mustHavePos[pos] = LETTER_MASK(arg[1]);
                 break;
             case '-':
                 if (arg[1] == '-') {
@@ -211,6 +222,8 @@ int main(int argc, char** argv) {
                         noColors = true;
                     } else if (!strcmp("--answers-only", arg)) {
                         in.answersOnly = true;
+                    } else if (!strcmp("--scrabble-only", arg)) {
+                        in.scrabbleOnly = true;
                     }
                 } else {
                     for (int j = 1; j < len; ++j) {

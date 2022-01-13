@@ -14,13 +14,14 @@ Tested with `clang-1300.0.29.3` but ought to work on anything remotely modern.
 
 `wordlesmith [--help] [--no-colors] [--answers-only] FILTERS`
 
-Wordlesmith starts with an 12,972-word worldlist taken directly from the Wordle source code. You then use filters, in the form of command line arguments, to whittle down the wordlist until you get the correct answer. The output is the top five matching words (based on Scoring, see below) and the total number of matches.
+Wordlesmith starts with an 12,973-word worldlist taken directly from the Wordle source code. You then use filters, in the form of command line arguments, to whittle down the wordlist until you get the correct answer. The output is the top five matching words (based on Scoring, see below) and the total number of matches.
 
 ### Flags
 
 - `--help`: Show the program help.
 - `--no-colors`: By default Wordlesmith will show any candidates that can potentially be answers (common words only) in orange and words that will be accepted as guesses but cannot be answers in gray. Setting `--no-colors` disables this, and switches to using as asterisk to indicated potential answers.
 - `--answers-only`: Only show common words that can potentially be answers. This has the upside of guaranteeing that all of your guesses could potentially be the correct answer, but may not be as effective, given that some non-answer words could filter the list more effectively.
+- `--scrabble-only`: Only show words that are in the Scrabble dictionary. This is useful for using this tool for solving some of the Wordle clones that use similar but slightly less permissive wordlists. You shouldn't use this option if you're playing the original Wordle.
 
 ### Filters
 
