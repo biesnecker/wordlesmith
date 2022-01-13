@@ -19,6 +19,7 @@ typedef struct FilterInput {
     uint32_t mustNotHave;
     uint32_t mustHavePos[WORD_LENGTH];
     uint32_t mustNotHavePos[WORD_LENGTH];
+    bool answersOnly;
 } FilterInput;
 
 typedef struct FilterOutput {
@@ -66,6 +67,9 @@ static void filterWords(word* words, int wordLen, const FilterInput* in,
     out->filteredLen = 0;
     for (int i = 0; i < wordLen; i++) {
         word* w = &words[i];
+        if (in->answersOnly && !w->canBeAnswer) {
+            continue;
+        }
         if ((w->contains & in->mustHave) != in->mustHave ||
             (w->contains & in->mustNotHave) != 0) {
             continue;
@@ -104,20 +108,32 @@ static bool isValidArgument(const char* arg, int* len) {
     if (arg[0] != '+' && arg[0] != '-' && arg[0] != '%') {
         return false;
     }
+
     if ((arg[0] == '%' || arg[0] == '+') &&
         ((*len != 3) || (arg[2] - '0' < 1 || arg[2] - '0' > WORD_LENGTH))) {
         return false;
     }
-    if (!islower(arg[1])) {
+
+    if (!(islower(arg[1]) || arg[1] == '-')) {
         return false;
     }
+
     if (arg[0] == '-') {
-        for (int i = 1; i < *len; ++i) {
-            if (!islower(arg[i])) {
+        if (arg[1] == '-') {
+            if (!(strcmp("--help", arg) == 0 ||
+                  strcmp("--no-colors", arg) == 0 ||
+                  strcmp("--answers-only", arg) == 0)) {
                 return false;
+            }
+        } else {
+            for (int i = 1; i < *len; ++i) {
+                if (!islower(arg[i])) {
+                    return false;
+                }
             }
         }
     }
+
     return true;
 }
 
@@ -134,8 +150,26 @@ static int compareScores(const void* a, const void* b) {
     }
 }
 
+static void showProgramHelp() {
+    printf("%s",
+           "wordlesmith - a tiny little helper for Wordle\n\n"
+           "usage: wordlesmith [--help] [--no-colors] [--answers-only] "
+           "FILTERS\n\n"
+           "For filter format, please see https://tinyurl.com/mrxrra6u\n\n"
+           "--help        : show this help\n"
+           "--no-colors   : don't output colors\n"
+           "--answers-only: only show candidates that could be a solution; "
+           "this\n"
+           "                reduces the number of possible words, but "
+           "might not\n"
+           "                lead to optimal filtering.\n");
+}
+
 int main(int argc, char** argv) {
     FilterInput in = {0};
+
+    bool showHelp = false;
+    bool noColors = false;
 
     for (int i = 1; i < argc; ++i) {
         char* arg = argv[i];
@@ -145,6 +179,7 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
         int pos;
+
         switch (arg[0]) {
             case '+':
                 // This is a mustHave argument.
@@ -152,14 +187,25 @@ int main(int argc, char** argv) {
                 if (len == 3) {
                     // This is a mustHavePosArgument.
                     pos = (int)(arg[2] - '0' - 1);
-                    // Each position can only be a single letter, so just assign
-                    // don't OR.
+                    // Each position can only be a single letter, so just
+                    // assign don't OR.
                     in.mustHavePos[pos] = LETTER_MASK(arg[1]);
                 }
                 break;
             case '-':
-                for (int j = 1; j < len; ++j) {
-                    in.mustNotHave |= LETTER_MASK(arg[j]);
+                if (arg[1] == '-') {
+                    // Handle the flags.
+                    if (!strcmp("--help", arg)) {
+                        showHelp = true;
+                    } else if (!strcmp("--no-colors", arg)) {
+                        noColors = true;
+                    } else if (!strcmp("--answers-only", arg)) {
+                        in.answersOnly = true;
+                    }
+                } else {
+                    for (int j = 1; j < len; ++j) {
+                        in.mustNotHave |= LETTER_MASK(arg[j]);
+                    }
                 }
                 break;
             case '%':
@@ -171,6 +217,11 @@ int main(int argc, char** argv) {
             default:
                 assert(false);
         }
+    }
+
+    if (showHelp) {
+        showProgramHelp();
+        return EXIT_SUCCESS;
     }
 
     FilterOutput out = {0};
@@ -187,7 +238,19 @@ int main(int argc, char** argv) {
     const int candidateCount =
         out.filteredLen >= CANDIDATE_COUNT ? CANDIDATE_COUNT : out.filteredLen;
     for (int i = 0; i < candidateCount; ++i) {
-        printf("%s\n", scores[i].w->w);
+        if (scores[i].w->canBeAnswer) {
+            if (noColors) {
+                printf("%s *\n", scores[i].w->w);
+            } else {
+                printf("\x1b[38;5;204m%s\x1b[0m\n", scores[i].w->w);
+            }
+        } else {
+            if (noColors) {
+                printf("%s\n", scores[i].w->w);
+            } else {
+                printf("\x1b[38;5;244m%s\x1b[0m\n", scores[i].w->w);
+            }
+        }
     }
     printf("Total Matches: %d/%d (%.2f%%)\n", out.filteredLen, wordCount,
            100.0 * (double)out.filteredLen / (double)wordCount);
