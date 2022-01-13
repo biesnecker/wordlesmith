@@ -69,10 +69,10 @@ The score is calculated by looking at each of the unknown positions (that is, po
 
 If you run `wordlesmith` with no filters you get the algorithm's guess at the five best initial words:
 
-1. tares
-2. lares
-3. cares
-4. pares
-5. dares
+1. soare
+2. saine
+3. slane
+4. saice
+5. slate
 
 I'm not 100% confident in this algorithm and would be happy to take pull requests.

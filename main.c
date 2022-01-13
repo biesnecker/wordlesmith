@@ -25,6 +25,7 @@ typedef struct FilterInput {
 typedef struct FilterOutput {
     word** filtered;
     int filteredLen;
+    int filteredAnswersLen;
     int letterCounts[26];
     int letterPositionCounts[WORD_LENGTH][26];
 } FilterOutput;
@@ -38,7 +39,10 @@ static void freeFilterOutput(FilterOutput* fo) { free(fo->filtered); }
 
 static double scoreWord(word* w, const FilterInput* fi,
                         const FilterOutput* fo) {
-    const double flen = (double)fo->filteredLen;
+    if (fo->filteredAnswersLen == 0) {
+        return 0;
+    }
+    const double flen = (double)fo->filteredAnswersLen;
     double score = 0.0;
     uint32_t seen = 0;
     for (int i = 0; i < WORD_LENGTH; i++) {
@@ -62,9 +66,10 @@ static double scoreWord(word* w, const FilterInput* fi,
 
 static void filterWords(word* words, int wordLen, const FilterInput* in,
                         FilterOutput* out) {
-    int filteredCap = 2;
+    int filteredCap = 512;
     out->filtered = calloc(filteredCap, sizeof(word*));
     out->filteredLen = 0;
+    out->filteredAnswersLen = 0;
     for (int i = 0; i < wordLen; i++) {
         word* w = &words[i];
         if (in->answersOnly && !w->canBeAnswer) {
@@ -88,10 +93,15 @@ static void filterWords(word* words, int wordLen, const FilterInput* in,
         }
         out->filtered[out->filteredLen++] = w;
 
-        for (int i = 0; i < WORD_LENGTH; i++) {
-            out->letterCounts[LETTER_IDX(w->w[i])] += 1;
-            out->letterPositionCounts[i][LETTER_IDX(w->w[i])] += 1;
+        if (w->canBeAnswer) {
+            for (int i = 0; i < WORD_LENGTH; i++) {
+                out->letterCounts[LETTER_IDX(w->w[i])] += 1;
+                out->letterPositionCounts[i][LETTER_IDX(w->w[i])] += 1;
+            }
+            out->filteredAnswersLen++;
         }
+
+        // Resize the answer list.
         if (out->filteredLen == filteredCap) {
             filteredCap *= 2;
             out->filtered = realloc(out->filtered, filteredCap * sizeof(word*));
