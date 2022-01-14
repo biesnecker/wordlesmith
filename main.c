@@ -189,6 +189,56 @@ static void showProgramHelp() {
            "                 different word lists.\n");
 }
 
+static bool handleArgument(const char* arg, FilterInput* filter, bool* showHelp,
+                           bool* noColors) {
+    int len;
+    if (!isValidArgument(arg, &len)) {
+        fprintf(stderr, "Invalid argument: %s\n", arg);
+        return false;
+    }
+    int pos;
+
+    switch (arg[0]) {
+        case '+':
+            // This is a mustHavePosArgument.
+            filter->mustHave |= LETTER_MASK(arg[1]);
+            pos = (int)(arg[2] - '0' - 1);
+            // Each position can only be a single letter, so just
+            // assign don't OR.
+            filter->mustHavePos[pos] = LETTER_MASK(arg[1]);
+            break;
+        case '-':
+            if (arg[1] == '-') {
+                // Handle the flags.
+                if (!strcmp("--help", arg)) {
+                    *showHelp = true;
+                } else if (!strcmp("--no-colors", arg)) {
+                    *noColors = true;
+                } else if (!strcmp("--answers-only", arg)) {
+                    filter->answersOnly = true;
+                } else if (!strcmp("--scrabble-only", arg)) {
+                    filter->scrabbleOnly = true;
+                }
+            } else {
+                for (int j = 1; j < len; ++j) {
+                    filter->mustNotHave |= LETTER_MASK(arg[j]);
+                }
+            }
+            break;
+        case '%':
+            // This letter must exist, but not at the location.
+            filter->mustHave |= LETTER_MASK(arg[1]);
+            pos = (int)(arg[2] - '0' - 1);
+            filter->mustNotHavePos[pos] |= LETTER_MASK(arg[1]);
+            break;
+        default:
+            fprintf(stderr, "Invalid argument: %s\n", arg);
+            return false;
+    }
+
+    return true;
+}
+
 int main(int argc, char** argv) {
     FilterInput in = {0};
 
@@ -196,49 +246,8 @@ int main(int argc, char** argv) {
     bool noColors = false;
 
     for (int i = 1; i < argc; ++i) {
-        char* arg = argv[i];
-        int len;
-        if (!isValidArgument(arg, &len)) {
-            fprintf(stderr, "Invalid argument: %s\n", arg);
+        if (!handleArgument(argv[i], &in, &showHelp, &noColors)) {
             return EXIT_FAILURE;
-        }
-        int pos;
-
-        switch (arg[0]) {
-            case '+':
-                // This is a mustHavePosArgument.
-                in.mustHave |= LETTER_MASK(arg[1]);
-                pos = (int)(arg[2] - '0' - 1);
-                // Each position can only be a single letter, so just
-                // assign don't OR.
-                in.mustHavePos[pos] = LETTER_MASK(arg[1]);
-                break;
-            case '-':
-                if (arg[1] == '-') {
-                    // Handle the flags.
-                    if (!strcmp("--help", arg)) {
-                        showHelp = true;
-                    } else if (!strcmp("--no-colors", arg)) {
-                        noColors = true;
-                    } else if (!strcmp("--answers-only", arg)) {
-                        in.answersOnly = true;
-                    } else if (!strcmp("--scrabble-only", arg)) {
-                        in.scrabbleOnly = true;
-                    }
-                } else {
-                    for (int j = 1; j < len; ++j) {
-                        in.mustNotHave |= LETTER_MASK(arg[j]);
-                    }
-                }
-                break;
-            case '%':
-                // This letter must exist, but not at the location.
-                in.mustHave |= LETTER_MASK(arg[1]);
-                pos = (int)(arg[2] - '0' - 1);
-                in.mustNotHavePos[pos] |= LETTER_MASK(arg[1]);
-                break;
-            default:
-                assert(false);
         }
     }
 
