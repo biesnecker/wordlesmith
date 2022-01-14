@@ -13,7 +13,7 @@ with open("answers.json") as fp:
 with open("scrabble.json") as fp:
     c = fp.read()
     words = json.loads(c)
-    scrabble = set(w for w in words)
+    scrabble = set(w for w in words if len(w) == 5)
 
 ALL_WORDS = sorted(set().union(accepted, answers, scrabble))
 
