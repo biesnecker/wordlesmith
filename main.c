@@ -239,6 +239,23 @@ static bool handleArgument(const char* arg, FilterInput* filter, bool* showHelp,
     return true;
 }
 
+static void cleanupFilter(FilterInput* filter) {
+    // A letter shouldn't be both a must have (green square) and excluded
+    // from candidates. Since we do these as seperate checks, filters like
+    // `+a1 -a` will return no candidates because they're contradictory
+    // requirements. This is somewhat problematic in the case where you
+    // guess a word that has two of the same letters but the target word
+    // only has one letter (such as guessing "arena" for the word "tangy").
+    // It will show one of the letters as either yellow or green, and the
+    // other as gray. The solution is simply exclude any must have letters
+    // from the must not have list.
+    //
+    // A more sophisticated limitation might limit words to only those
+    // that have a single instance of the letter in question, but that is
+    // probably overkill.
+    filter->mustNotHave &= ~(filter->mustHave);
+}
+
 int main(int argc, char** argv) {
     FilterInput in = {0};
 
@@ -255,6 +272,8 @@ int main(int argc, char** argv) {
         showProgramHelp();
         return EXIT_SUCCESS;
     }
+
+    cleanupFilter(&in);
 
     FilterOutput out = {0};
     filterWords(words, wordCount, &in, &out);
